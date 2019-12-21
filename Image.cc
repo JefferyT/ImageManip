@@ -14,66 +14,64 @@ char getIndex(PixelComponent comp, ImageData* rawImage, int x, int y) {
 }
 
 ImageData* loadJpg(const char* name) {
-  /* these are standard libjpeg structures for reading(decompression) */
-	struct jpeg_decompress_struct cinfo;
-	struct jpeg_error_mgr jerr;
+  ImageData *ret = new ImageData();
+  unsigned char a, r, g, b;
+  int width, height;
+  struct jpeg_decompress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+  
+  
+  FILE * infile;        /* source file */
+  JSAMPARRAY pJpegBuffer;       /* Output row buffer */
+  int row_stride;       /* physical row width in output buffer */
+  if ((infile = fopen(name, "rb")) == NULL) {
+    fprintf(stderr, "can't open %s\n", name);
+    return 0;
+  }
+  cinfo.err = jpeg_std_error(&jerr);
+  jpeg_create_decompress(&cinfo);
+  jpeg_stdio_src(&cinfo, infile);
+  jpeg_read_header(&cinfo, TRUE);
+  (void) jpeg_start_decompress(&cinfo);
+  width = cinfo.output_width;
+  height = cinfo.output_height;
+  
+  ret->width = width;
+  ret->height = height;
 
-	/* libjpeg data structure for storing one row, that is, scanline of an image */
-	JSAMPROW row_pointer[1];
-	FILE *infile = fopen(filename, "rb");
-	unsigned long location = 0;
-	int i = 0;
-	if (!infile)
-	{
-		printf("Error opening jpeg file %s\n!", filename);
-		return -1;
-	}
+  ret->raw = new unsigned char[sizeof(char) * width * height * 3];
 
-	/* here we set up the standard libjpeg error handler */
-	cinfo.err = jpeg_std_error(&jerr);
-
-	/* setup decompression process and source, then read JPEG header */
-	jpeg_create_decompress(&cinfo);
-
-	/* this makes the library read from infile */
-	jpeg_stdio_src(&cinfo, infile);
-
-	/* reading the image header which contains image information */
-	jpeg_read_header(&cinfo, TRUE);
-
-	/* Uncomment the following to output image information, if needed. */
-	/*--
-	printf( "JPEG File Information: \n" );
-	printf( "Image width and height: %d pixels and %d pixels.\n", cinfo.image_width, cinfo.image_height );
-	printf( "Color components per pixel: %d.\n", cinfo.num_components );
-	printf( "Color space: %d.\n", cinfo.jpeg_color_space );
-	--*/
-
-	/* Start decompression jpeg here */
-	jpeg_start_decompress(&cinfo);
-
-	/* allocate memory to hold the uncompressed image */
-	raw_image = (unsigned char*)malloc(cinfo.output_width*cinfo.output_height*cinfo.num_components);
-
-	/* now actually read the jpeg into the raw buffer */
-	row_pointer[0] = (unsigned char *)malloc(cinfo.output_width*cinfo.num_components);
-
-	/* read one scan line at a time */
-	while (cinfo.output_scanline < cinfo.image_height)
-	{
-		jpeg_read_scanlines(&cinfo, row_pointer, 1);
-		for (i = 0; i < cinfo.image_width*cinfo.num_components; i++)
-			raw_image[location++] = row_pointer[0][i];
-	}
-
-	/* wrap up decompression, destroy objects, free pointers and close open files */
-	jpeg_finish_decompress(&cinfo);
-	jpeg_destroy_decompress(&cinfo);
-	free(row_pointer[0]);
-	fclose(infile);
-
-	/* yup, we succeeded! */
-	return 1;
+  int index = 0;
+  if (!(ret->raw)) {
+    printf("NO MEM FOR JPEG CONVERT!\n");
+    return 0;
+  }
+  row_stride = width * cinfo.output_components;
+  pJpegBuffer = (*cinfo.mem->alloc_sarray)
+    ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+ 
+  while (cinfo.output_scanline < cinfo.output_height) {
+	(void) jpeg_read_scanlines(&cinfo, pJpegBuffer, 1);
+    for (int x = 0; x < width; x++) {
+      a = 0; // alpha value is not supported on jpg
+      r = pJpegBuffer[0][cinfo.output_components * x];
+      if (cinfo.output_components > 2) {
+        g = pJpegBuffer[0][cinfo.output_components * x + 1];
+        b = pJpegBuffer[0][cinfo.output_components * x + 2];
+      } else {
+        g = r;
+        b = r;
+      }
+	  ret->raw[index] = r;
+      ret->raw[index+1] = g;
+      ret->raw[index+2] = b;
+	  index++;
+    }
+  }
+  fclose(infile);
+  (void) jpeg_finish_decompress(&cinfo);
+  jpeg_destroy_decompress(&cinfo);
+  return ret;
 }
 
 int saveJpg(ImageData* raw, const char* filename) {

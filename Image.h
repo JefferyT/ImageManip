@@ -1,15 +1,23 @@
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef IMAGE_H_
+#define IMAGE_H_
+
+#include <cstdlib>
 #include <jpeglib.h>
+#include <string>
 
-typedef struct ImageData {
-  int width;
-  int height;
-  unsigned char * raw;
-} ImageData;
+using std::string;
 
-typedef enum {R, G, B} PixelComponent;
+class Image {
+ public:
+  explicit Image(const char * inputName);
+  Image(const Image &other);
+  ~Image();
+  void saveImage(const char *outputName);
+ private:
+  char *raw_image_;
+  string input_name_;
+  int width_;
+  int height_;
+};
 
-ImageData* loadJpg(const char* Name);
-int saveJpg(ImageData* image, const char* name);
-unsigned char getValue(PixelComponent component, int x, int y);
+#endif  // IMAGE_H_
