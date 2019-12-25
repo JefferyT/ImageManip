@@ -6,7 +6,7 @@ LINK=-o
 all: PhotoMod Example
 
 Example: Example.c
-	$(CC) Example Example.c -ljpeg
+	$(CC) $(LINK) Example Example.c -ljpeg
 
 PhotoMod: PhotoMod.o Image.o
 	$(PP) $(LINK) PhotoMod PhotoMod.o Image.o -ljpeg

@@ -50,12 +50,12 @@ int read_jpeg_file(char *filename)
 	jpeg_read_header(&cinfo, TRUE);
 
 	/* Uncomment the following to output image information, if needed. */
-	/*--
+	
 	printf( "JPEG File Information: \n" );
 	printf( "Image width and height: %d pixels and %d pixels.\n", cinfo.image_width, cinfo.image_height );
 	printf( "Color components per pixel: %d.\n", cinfo.num_components );
 	printf( "Color space: %d.\n", cinfo.jpeg_color_space );
-	--*/
+	
 
 	/* Start decompression jpeg here */
 	jpeg_start_decompress(&cinfo);
