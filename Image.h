@@ -6,12 +6,11 @@
 #ifndef IMAGE_H_
 #define IMAGE_H_
 
-
-#include <jpeglib.h>
-#include <string.h>
 #include <cstdlib>
 #include <string>
 #include <iostream>
+#include <jpeglib.h>
+#include <string.h>
 
 using std::string;
 

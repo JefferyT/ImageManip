@@ -72,8 +72,11 @@ Image::Image(const char *fileName, int width,
           int height, unsigned char *raw) :
           width_(width), height_(height) {
   valid_ = false;
-  strncpy(reinterpret_cast<char *>(this->raw_image_),
-            reinterpret_cast<char *>(raw), width_ * height_);
+  if (width * height * DEFAULT_NUM_COMPONENTS != sizeof(raw)/sizeof(raw[0])) {
+    return;
+  }
+  strncpy(reinterpret_cast<char *>(this->raw_image_), reinterpret_cast<char *>(raw),
+            width_ * height_ * DEFAULT_NUM_COMPONENTS);
 }
 
 Image::Image(const Image &other) : input_name_(other.input_name_),
@@ -81,8 +84,7 @@ Image::Image(const Image &other) : input_name_(other.input_name_),
             bytes_per_pixel_(other.bytes_per_pixel_),
             color_space_(other.color_space_) {
   this->raw_image_ = new unsigned char[other.width_ * other.height_];
-  strncpy(reinterpret_cast<char *>(this->raw_image_),
-            reinterpret_cast<char *>(other.raw_image_),
+  strncpy((char *) this->raw_image_, (char *) other.raw_image_,
             other.width_ * other.height_);
 }
 
@@ -92,7 +94,7 @@ Image::~Image() {
 
 int Image::saveImage(const char *outputName, int quality) {
   struct jpeg_compress_struct cinfo;
-  struct jpeg_error_mgr jerr;
+	struct jpeg_error_mgr jerr;
   JSAMPROW row_pointer[1];
   FILE *outfile = fopen(outputName, "wb");
   if (!outfile) {
@@ -158,7 +160,7 @@ bool Image::blackAndWhite(const char *outputName, int quality) {
         bAndW += weights[k] + bW.raw_image_[rgbI[k]];
       }
       bAndW += 0.5;
-      int rounded = static_cast<int>(bAndW);
+      int rounded = (int) bAndW;
       unsigned char val = rounded;
       for (int k = 0; k < 3; k++) {
         bW.raw_image_[rgbI[k]] = val;
@@ -166,7 +168,6 @@ bool Image::blackAndWhite(const char *outputName, int quality) {
     }
   }
   bW.saveImage(outputName, quality);
-  bW.cut();
   return true;
 }
 
