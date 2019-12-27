@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     if (!img2.isValid()) {
       return EXIT_FAILURE;
     }
-    // img.saveImage(outFile.c_str(), 100);
+    img.saveImage(outFile.c_str(), 100);
     // img.blackAndWhite("bandw.jpg", 100);
   }
 }

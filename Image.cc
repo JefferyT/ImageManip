@@ -48,11 +48,17 @@ Image::Image(const char *inputName) {
   this->bytes_per_pixel_ = cinfo.num_components;
   this->color_space_ = cinfo.out_color_space;
 
-  this->raw_image_ = new unsigned char[cinfo.output_width *
-              cinfo.output_height * cinfo.num_components];
+  this->raw_image_ = shared_ptr<unsigned char[]> (new unsigned char[cinfo.output_width *
+              cinfo.output_height * cinfo.num_components]);
+  if (this->raw_image_ == nullptr) {
+    return;
+  }
 
   row_pointer[0] = new unsigned char[cinfo.output_width *
               cinfo.num_components];
+  if (row_pointer[0] == nullptr) {
+    return;
+  }
 
   while (cinfo.output_scanline < cinfo.image_height) {
     jpeg_read_scanlines(&cinfo, row_pointer, 1);
@@ -75,7 +81,7 @@ Image::Image(const char *fileName, int width,
   if (width * height * DEFAULT_NUM_COMPONENTS != sizeof(raw)/sizeof(raw[0])) {
     return;
   }
-  strncpy(reinterpret_cast<char *>(this->raw_image_), reinterpret_cast<char *>(raw),
+  strncpy(reinterpret_cast<char *>(this->raw_image_.get()), reinterpret_cast<char *>(raw),
             width_ * height_ * DEFAULT_NUM_COMPONENTS);
 }
 
@@ -83,20 +89,15 @@ Image::Image(const Image &other) : input_name_(other.input_name_),
             width_(other.width_), height_(other.height_),
             bytes_per_pixel_(other.bytes_per_pixel_),
             color_space_(other.color_space_) {
-  this->raw_image_ = new unsigned char[other.width_ * other.height_];
+  this->raw_image_ = shared_ptr<unsigned char[]>
+            (new unsigned char[other.width_ * other.height_]);
   if (this->raw_image_ == nullptr) {
     valid_ = false;
     return;
   }
-  strncpy((char *) this->raw_image_, (char *) other.raw_image_,
+  strncpy((char *) this->raw_image_.get(), (char *) other.raw_image_.get(),
             other.width_ * other.height_ * this->bytes_per_pixel_);
   this->valid_ = true;
-}
-
-Image::~Image() {
-  if (this->isValid()) {
-    delete[] this->raw_image_;
-  }
 }
 
 int Image::saveImage(const char *outputName, int quality) {

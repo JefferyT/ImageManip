@@ -9,9 +9,11 @@
 #include <cstdlib>
 #include <string>
 #include <iostream>
+#include <memory>
 #include <jpeglib.h>
 #include <string.h>
 
+using std::shared_ptr;
 using std::string;
 
 class Image {
@@ -21,7 +23,6 @@ class Image {
   explicit Image(const char *fileName, int width,
             int height, unsigned char *raw);
   Image(const Image &other);
-  ~Image();
   int saveImage(const char *outputName, int quality);
   bool isValid() {return valid_;}
   bool blackAndWhite(const char *outputName, int quality);
@@ -29,7 +30,7 @@ class Image {
   int getIndex(char color, int x, int y);
   void cut();
   bool valid_;
-  unsigned char *raw_image_;
+  shared_ptr<unsigned char[]> raw_image_;
   string input_name_;
   int width_;
   int height_;
