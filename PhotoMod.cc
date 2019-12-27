@@ -14,7 +14,14 @@ int main(int argc, char** argv) {
   if (argc == 2) {
     string outFile = "out.jpg";
     Image img(argv[1]);
-    img.saveImage(outFile.c_str(), 100);
-    img.blackAndWhite("bandw.jpg", 100);
+    if (!img.isValid()) {
+      return EXIT_FAILURE;
+    }
+    Image img2(img);
+    if (!img2.isValid()) {
+      return EXIT_FAILURE;
+    }
+    // img.saveImage(outFile.c_str(), 100);
+    // img.blackAndWhite("bandw.jpg", 100);
   }
 }

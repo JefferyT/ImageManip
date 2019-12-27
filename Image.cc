@@ -63,7 +63,7 @@ Image::Image(const char *inputName) {
 
   jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
-  delete[](row_pointer[0]);
+  delete[] row_pointer[0];
   fclose(infile);
   valid_ = true;
 }
@@ -84,12 +84,19 @@ Image::Image(const Image &other) : input_name_(other.input_name_),
             bytes_per_pixel_(other.bytes_per_pixel_),
             color_space_(other.color_space_) {
   this->raw_image_ = new unsigned char[other.width_ * other.height_];
+  if (this->raw_image_ == nullptr) {
+    valid_ = false;
+    return;
+  }
   strncpy((char *) this->raw_image_, (char *) other.raw_image_,
-            other.width_ * other.height_);
+            other.width_ * other.height_ * this->bytes_per_pixel_);
+  this->valid_ = true;
 }
 
 Image::~Image() {
-  delete[](raw_image_);
+  if (this->isValid()) {
+    delete[] this->raw_image_;
+  }
 }
 
 int Image::saveImage(const char *outputName, int quality) {
@@ -168,6 +175,7 @@ bool Image::blackAndWhite(const char *outputName, int quality) {
     }
   }
   bW.saveImage(outputName, quality);
+  bW.cut();
   return true;
 }
 
